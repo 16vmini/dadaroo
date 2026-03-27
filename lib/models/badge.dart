@@ -77,4 +77,23 @@ class Badge {
   final DateTime earnedAt;
 
   Badge({required this.type, required this.earnedAt});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type.name,
+      'earnedAt': earnedAt.toIso8601String(),
+    };
+  }
+
+  factory Badge.fromMap(Map<String, dynamic> map) {
+    return Badge(
+      type: BadgeType.values.firstWhere(
+        (b) => b.name == map['type'],
+        orElse: () => BadgeType.speedDemon,
+      ),
+      earnedAt: map['earnedAt'] != null
+          ? DateTime.parse(map['earnedAt'])
+          : DateTime.now(),
+    );
+  }
 }

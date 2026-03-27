@@ -1,0 +1,47 @@
+Wire up Firebase backend for the Dadaroo Flutter app. The app already has all UI screens built with mock data. Replace the mocks with real Firebase integration:
+
+1. FIREBASE AUTH:
+   - Email/password sign up and login
+   - Choose role: Dad or Family Member
+   - Simple onboarding flow
+   - Login/register screens with the warm orange/brown Dadaroo theme
+
+2. FIRESTORE DATABASE:
+   - Family groups collection: family code, members, dad(s)
+   - Deliveries collection: takeaway type, timestamps, GPS trail, status (active/completed)
+   - Ratings collection: stars per category, badges earned
+   - User profiles: name, role, family group, stats
+
+3. FAMILY LINKING:
+   - Dad creates a family group and gets a 6-digit invite code
+   - Family members join by entering the code
+   - QR code option too (generate and scan)
+
+4. REAL-TIME GPS TRACKING:
+   - Use geolocator package for Dad GPS position
+   - Store live position in Firestore (realtime updates)
+   - Family view reads Dad position and shows on map
+   - Calculate ETA based on distance and speed
+
+5. PUSH NOTIFICATIONS (Firebase Cloud Messaging):
+   - Notify family when Dad hits "I got the food!" button
+   - Notify when Dad is close (under 2 mins away)
+   - Notify Dad when ratings come in
+
+6. UPDATE THE EXISTING SCREENS:
+   - Replace AppProvider mock data with Firestore streams
+   - Dad View: real GPS tracking on button press
+   - Family View: real map with Dad location from Firestore
+   - Rate Dad: save ratings to Firestore
+   - History: read from Firestore
+
+7. ADD NEW SCREENS:
+   - Login/Register screen
+   - Family Setup screen (create/join family)
+   - Profile screen
+
+Add firebase_core, cloud_firestore, firebase_auth, firebase_messaging, geolocator, and google_maps_flutter to pubspec.yaml.
+
+NOTE: Since we cannot run flutterfire configure here, set up the Firebase config files as placeholders with clear TODO comments showing what values need to be filled in. Create a SETUP.md explaining how to create the Firebase project and configure it.
+
+When completely finished, run: openclaw system event --text "Done: Dadaroo Firebase backend wired up" --mode now

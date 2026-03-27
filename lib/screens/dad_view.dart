@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dadaroo/models/takeaway_type.dart';
 import 'package:dadaroo/providers/app_provider.dart';
+import 'package:dadaroo/screens/profile_screen.dart';
 import 'package:dadaroo/services/dad_jokes.dart';
 import 'package:dadaroo/theme/app_theme.dart';
 
@@ -40,31 +41,44 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
       return _buildActiveDeliveryView(provider);
     }
 
+    final userName = provider.userProfile?.name ?? provider.currentDad.name;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('🚗 Dadaroo'),
         actions: [
-          PopupMenuButton<String>(
+          if (provider.dads.length > 1)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.swap_horiz),
+              tooltip: 'Switch Dad',
+              onSelected: (dadId) => provider.setCurrentDad(dadId),
+              itemBuilder: (_) => provider.dads
+                  .map((d) => PopupMenuItem(
+                        value: d.id,
+                        child: Row(
+                          children: [
+                            Icon(
+                              d.id == provider.currentDad.id
+                                  ? Icons.check_circle
+                                  : Icons.circle_outlined,
+                              color: AppTheme.primaryOrange,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(d.name),
+                          ],
+                        ),
+                      ))
+                  .toList(),
+            ),
+          IconButton(
             icon: const Icon(Icons.person),
-            onSelected: (dadId) => provider.setCurrentDad(dadId),
-            itemBuilder: (_) => provider.dads
-                .map((d) => PopupMenuItem(
-                      value: d.id,
-                      child: Row(
-                        children: [
-                          Icon(
-                            d.id == provider.currentDad.id
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                            color: AppTheme.primaryOrange,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(d.name),
-                        ],
-                      ),
-                    ))
-                .toList(),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            },
           ),
         ],
       ),
@@ -75,7 +89,7 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
             const SizedBox(height: 20),
             // Dad greeting
             Text(
-              'Hey ${provider.currentDad.name}! 👋',
+              'Hey $userName! 👋',
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -141,18 +155,21 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
                       children: [
                         ChoiceChip(
                           label: const Text('✨ Custom'),
-                          selected: provider.selectedTakeaway == TakeawayType.custom,
+                          selected:
+                              provider.selectedTakeaway == TakeawayType.custom,
                           onSelected: (_) =>
                               provider.setSelectedTakeaway(TakeawayType.custom),
                           selectedColor: AppTheme.primaryOrange,
                           labelStyle: TextStyle(
-                            color: provider.selectedTakeaway == TakeawayType.custom
-                                ? Colors.white
-                                : AppTheme.darkBrown,
+                            color:
+                                provider.selectedTakeaway == TakeawayType.custom
+                                    ? Colors.white
+                                    : AppTheme.darkBrown,
                           ),
                           backgroundColor: AppTheme.lightOrange,
                         ),
-                        if (provider.selectedTakeaway == TakeawayType.custom) ...[
+                        if (provider.selectedTakeaway ==
+                            TakeawayType.custom) ...[
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextField(
@@ -277,7 +294,8 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
           TextButton.icon(
             onPressed: () => provider.simulateArrival(),
             icon: const Icon(Icons.fast_forward, color: Colors.white),
-            label: const Text('Demo: Arrive', style: TextStyle(color: Colors.white)),
+            label: const Text('Demo: Arrive',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -317,7 +335,8 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.timer, color: AppTheme.primaryOrange),
+                          const Icon(Icons.timer,
+                              color: AppTheme.primaryOrange),
                           const SizedBox(width: 8),
                           Text(
                             'ETA: ${minutes}m ${seconds.toString().padLeft(2, '0')}s',
@@ -337,7 +356,8 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
                       child: LinearProgressIndicator(
                         value: provider.deliveryProgress,
                         backgroundColor: AppTheme.lightOrange,
-                        valueColor: const AlwaysStoppedAnimation(AppTheme.primaryOrange),
+                        valueColor: const AlwaysStoppedAnimation(
+                            AppTheme.primaryOrange),
                         minHeight: 12,
                       ),
                     ),
