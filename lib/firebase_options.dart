@@ -1,20 +1,19 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Firebase configuration placeholder.
-///
-/// TODO: Replace these placeholder values with your actual Firebase project config.
-/// Run `flutterfire configure` in your project directory to auto-generate this file,
-/// or manually fill in the values from the Firebase Console:
-///   Project Settings > General > Your apps > Config
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+    if (kIsWeb) {
+      return web;
+    }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
         return ios;
+      case TargetPlatform.macOS:
+        return macos;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not configured for this platform.',
@@ -22,22 +21,38 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // TODO: Replace with your Android Firebase config
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'TODO-your-android-api-key',
-    appId: 'TODO-your-android-app-id',
-    messagingSenderId: 'TODO-your-sender-id',
-    projectId: 'TODO-your-project-id',
-    storageBucket: 'TODO-your-storage-bucket',
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyD3KMPOeV-QK4h7CcjBANcbRYATLas0jsc',
+    appId: '1:33133754624:web:ebd31dded5cff1b0909be5',
+    messagingSenderId: '33133754624',
+    projectId: 'dadaroo',
+    storageBucket: 'dadaroo.firebasestorage.app',
+    authDomain: 'dadaroo.firebaseapp.com',
   );
 
-  // TODO: Replace with your iOS Firebase config
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyCMFkwoCQ7_sRqF7dve8GEfJgq3aGjr8P8',
+    appId: '1:33133754624:android:46702b5ca6227087909be5',
+    messagingSenderId: '33133754624',
+    projectId: 'dadaroo',
+    storageBucket: 'dadaroo.firebasestorage.app',
+  );
+
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'TODO-your-ios-api-key',
-    appId: 'TODO-your-ios-app-id',
-    messagingSenderId: 'TODO-your-sender-id',
-    projectId: 'TODO-your-project-id',
-    storageBucket: 'TODO-your-storage-bucket',
+    apiKey: 'AIzaSyB3-N5KwVMHmZ41RTmmppaVm80uXeR9yxo',
+    appId: '1:33133754624:ios:e76b8f53835d3de5909be5',
+    messagingSenderId: '33133754624',
+    projectId: 'dadaroo',
+    storageBucket: 'dadaroo.firebasestorage.app',
+    iosBundleId: 'com.example.dadaroo',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyB3-N5KwVMHmZ41RTmmppaVm80uXeR9yxo',
+    appId: '1:33133754624:ios:e76b8f53835d3de5909be5',
+    messagingSenderId: '33133754624',
+    projectId: 'dadaroo',
+    storageBucket: 'dadaroo.firebasestorage.app',
     iosBundleId: 'com.example.dadaroo',
   );
 }
