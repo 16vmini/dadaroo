@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dadaroo/models/delivery.dart';
 
 class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -118,6 +119,21 @@ class NotificationService {
       'createdAt': FieldValue.serverTimestamp(),
       'processed': false,
     });
+  }
+
+  /// Notify family of a delivery status change.
+  Future<void> notifyStatusUpdate({
+    required String familyGroupId,
+    required String parentName,
+    required DeliveryStatus status,
+  }) async {
+    await sendFamilyNotification(
+      familyGroupId: familyGroupId,
+      title: '${status.emoji} ${status.displayName}',
+      body: '$parentName ${status.familyMessage}',
+      type: 'status_update',
+      data: {'status': status.name},
+    );
   }
 
   void dispose() {

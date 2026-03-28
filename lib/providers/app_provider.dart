@@ -411,6 +411,75 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Advance the delivery to a specific status.
+  Future<void> updateDeliveryStatus(DeliveryStatus newStatus) async {
+    if (_activeDelivery == null) return;
+
+    _activeDelivery = _activeDelivery!.copyWith(status: newStatus);
+
+    if (_familyGroup != null) {
+      await _firestoreService.updateDeliveryStatus(
+        deliveryId: _activeDelivery!.id,
+        status: newStatus,
+      );
+
+      await _notificationService.notifyStatusUpdate(
+        familyGroupId: _familyGroup!.id,
+        parentName: _activeDelivery!.dadName,
+        status: newStatus,
+      );
+    }
+
+    // Start GPS tracking when moving to onRoute
+    if (newStatus == DeliveryStatus.onRoute) {
+      await _startGpsOrMock();
+    }
+
+    // Complete delivery when status is delivered
+    if (newStatus == DeliveryStatus.delivered) {
+      await _completeDelivery();
+      return;
+    }
+
+    notifyListeners();
+  }
+
+  /// Advance to the next status in the flow.
+  Future<void> advanceDeliveryStatus() async {
+    if (_activeDelivery == null) return;
+    final next = _activeDelivery!.status.next;
+    if (next != null) {
+      await updateDeliveryStatus(next);
+    }
+  }
+
+  Future<void> _startGpsOrMock() async {
+    if (_familyGroup != null) {
+      final hasPermission = await _gpsTrackingService.ensurePermissions();
+      if (hasPermission) {
+        await _gpsTrackingService.startTracking(
+          deliveryId: _activeDelivery!.id,
+          homeLatitude: 51.5150,
+          homeLongitude: -0.1100,
+          onUpdate: (position, eta) {
+            _currentParentLocation =
+                LatLng(position.latitude, position.longitude);
+            if (eta != null && eta.inSeconds <= 120 && !_parentIsClose) {
+              _parentIsClose = true;
+              if (_activeDelivery != null &&
+                  _activeDelivery!.status == DeliveryStatus.onRoute) {
+                updateDeliveryStatus(DeliveryStatus.nearlyThere);
+              }
+            }
+            notifyListeners();
+          },
+        );
+        return;
+      }
+    }
+    _startMockTracking();
+  }
+
   Future<void> startDelivery() async {
     final delivery = Delivery(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -423,6 +492,7 @@ class AppProvider extends ChangeNotifier {
       startTime: DateTime.now(),
       estimatedDuration: const Duration(minutes: 10),
       isActive: true,
+      status: DeliveryStatus.arrivedAtRestaurant,
     );
 
     _activeDelivery = delivery;
@@ -438,26 +508,6 @@ class AppProvider extends ChangeNotifier {
         parentName: delivery.dadName,
         takeawayName: delivery.takeawayDisplayName,
       );
-
-      final hasPermission = await _gpsTrackingService.ensurePermissions();
-      if (hasPermission) {
-        await _gpsTrackingService.startTracking(
-          deliveryId: delivery.id,
-          homeLatitude: 51.5150,
-          homeLongitude: -0.1100,
-          onUpdate: (position, eta) {
-            _currentParentLocation = LatLng(position.latitude, position.longitude);
-            if (eta != null && eta.inSeconds <= 120 && !_parentIsClose) {
-              _parentIsClose = true;
-            }
-            notifyListeners();
-          },
-        );
-      } else {
-        _startMockTracking();
-      }
-    } else {
-      _startMockTracking();
     }
 
     notifyListeners();
@@ -482,6 +532,7 @@ class AppProvider extends ChangeNotifier {
       startTime: DateTime.now(),
       estimatedDuration: Duration(minutes: 10 * stops.length),
       isActive: true,
+      status: DeliveryStatus.arrivedAtRestaurant,
       stops: stopsWithStatus,
       currentStopIndex: 0,
     );
@@ -501,27 +552,6 @@ class AppProvider extends ChangeNotifier {
         takeawayName:
             '${delivery.takeawayDisplayName} (${stops.length} stops: $stopNames)',
       );
-
-      final hasPermission = await _gpsTrackingService.ensurePermissions();
-      if (hasPermission) {
-        await _gpsTrackingService.startTracking(
-          deliveryId: delivery.id,
-          homeLatitude: 51.5150,
-          homeLongitude: -0.1100,
-          onUpdate: (position, eta) {
-            _currentParentLocation =
-                LatLng(position.latitude, position.longitude);
-            if (eta != null && eta.inSeconds <= 120 && !_parentIsClose) {
-              _parentIsClose = true;
-            }
-            notifyListeners();
-          },
-        );
-      } else {
-        _startMockTracking();
-      }
-    } else {
-      _startMockTracking();
     }
 
     notifyListeners();
@@ -574,6 +604,10 @@ class AppProvider extends ChangeNotifier {
 
       if (remaining.inSeconds <= 120 && !_parentIsClose) {
         _parentIsClose = true;
+        if (_activeDelivery != null &&
+            _activeDelivery!.status == DeliveryStatus.onRoute) {
+          updateDeliveryStatus(DeliveryStatus.nearlyThere);
+        }
       }
 
       if (_mockGpsService.hasArrived) {
@@ -590,6 +624,7 @@ class AppProvider extends ChangeNotifier {
     _activeDelivery = _activeDelivery!.copyWith(
       arrivalTime: DateTime.now(),
       isActive: false,
+      status: DeliveryStatus.delivered,
     );
     _showCelebration = true;
 

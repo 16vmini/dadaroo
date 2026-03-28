@@ -2,6 +2,67 @@ import 'package:dadaroo/models/takeaway_type.dart';
 import 'package:dadaroo/models/rating.dart';
 import 'package:dadaroo/models/delivery_stop.dart';
 
+/// The overall lifecycle status of a delivery.
+enum DeliveryStatus {
+  arrivedAtRestaurant,
+  orderPlaced,
+  orderPreparing,
+  orderCollected,
+  onRoute,
+  nearlyThere,
+  delivered;
+
+  String get displayName => switch (this) {
+        arrivedAtRestaurant => 'Arrived at Restaurant',
+        orderPlaced => 'Order Placed',
+        orderPreparing => 'Order Being Prepared',
+        orderCollected => 'Order Collected',
+        onRoute => 'On Route',
+        nearlyThere => 'Nearly There!',
+        delivered => 'Delivered',
+      };
+
+  String get emoji => switch (this) {
+        arrivedAtRestaurant => '🏪',
+        orderPlaced => '📋',
+        orderPreparing => '👨‍🍳',
+        orderCollected => '🛍️',
+        onRoute => '🚗',
+        nearlyThere => '📍',
+        delivered => '✅',
+      };
+
+  String get familyMessage => switch (this) {
+        arrivedAtRestaurant => 'just arrived at the restaurant!',
+        orderPlaced => 'has placed the order!',
+        orderPreparing => "'s order is being prepared...",
+        orderCollected => 'has collected the food!',
+        onRoute => 'is on the way home!',
+        nearlyThere => 'is nearly there!',
+        delivered => 'has arrived with the food!',
+      };
+
+  /// Whether GPS tracking should be active for this status.
+  bool get isTracking => this == onRoute || this == nearlyThere;
+
+  /// Whether the delivery is still in progress (not yet delivered).
+  bool get isInProgress => this != delivered;
+
+  /// The next status in the flow, or null if delivered.
+  DeliveryStatus? get next => switch (this) {
+        arrivedAtRestaurant => orderPlaced,
+        orderPlaced => orderPreparing,
+        orderPreparing => orderCollected,
+        orderCollected => onRoute,
+        onRoute => nearlyThere,
+        nearlyThere => delivered,
+        delivered => null,
+      };
+
+  /// Progress value 0.0–1.0 through the status flow.
+  double get progressValue => index / (DeliveryStatus.values.length - 1);
+}
+
 class GpsPoint {
   final double latitude;
   final double longitude;
@@ -43,6 +104,7 @@ class Delivery {
   final List<GpsPoint> gpsTrail;
   final double? currentLatitude;
   final double? currentLongitude;
+  final DeliveryStatus status;
   final List<DeliveryStop> stops;
   final int currentStopIndex;
 
@@ -61,6 +123,7 @@ class Delivery {
     this.gpsTrail = const [],
     this.currentLatitude,
     this.currentLongitude,
+    this.status = DeliveryStatus.arrivedAtRestaurant,
     this.stops = const [],
     this.currentStopIndex = 0,
   });
@@ -104,6 +167,7 @@ class Delivery {
       'gpsTrail': gpsTrail.map((p) => p.toMap()).toList(),
       'currentLatitude': currentLatitude,
       'currentLongitude': currentLongitude,
+      'status': status.name,
       'stops': stops.map((s) => s.toMap()).toList(),
       'currentStopIndex': currentStopIndex,
     };
@@ -138,6 +202,10 @@ class Delivery {
           : [],
       currentLatitude: (map['currentLatitude'] as num?)?.toDouble(),
       currentLongitude: (map['currentLongitude'] as num?)?.toDouble(),
+      status: DeliveryStatus.values.firstWhere(
+        (s) => s.name == map['status'],
+        orElse: () => DeliveryStatus.arrivedAtRestaurant,
+      ),
       stops: map['stops'] != null
           ? (map['stops'] as List)
               .map((s) => DeliveryStop.fromMap(s))
@@ -162,6 +230,7 @@ class Delivery {
     List<GpsPoint>? gpsTrail,
     double? currentLatitude,
     double? currentLongitude,
+    DeliveryStatus? status,
     List<DeliveryStop>? stops,
     int? currentStopIndex,
   }) {
@@ -180,6 +249,7 @@ class Delivery {
       gpsTrail: gpsTrail ?? this.gpsTrail,
       currentLatitude: currentLatitude ?? this.currentLatitude,
       currentLongitude: currentLongitude ?? this.currentLongitude,
+      status: status ?? this.status,
       stops: stops ?? this.stops,
       currentStopIndex: currentStopIndex ?? this.currentStopIndex,
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dadaroo/config/app_config.dart';
+import 'package:dadaroo/models/delivery.dart';
 import 'package:dadaroo/models/takeaway_type.dart';
 import 'package:dadaroo/providers/app_provider.dart';
 import 'package:dadaroo/screens/delivery_setup_screen.dart';
@@ -288,15 +289,12 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
 
   Widget _buildActiveDeliveryView(AppProvider provider) {
     final delivery = provider.activeDelivery!;
-    final eta = provider.etaRemaining;
-    final minutes = eta.inMinutes;
-    final seconds = eta.inSeconds % 60;
+    final status = delivery.status;
+    final isTracking = status.isTracking;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(delivery.isMultiDrop
-            ? '🚗 Stop ${delivery.currentStopIndex + 1} of ${delivery.totalStops}'
-            : '🚗 On My Way!'),
+        title: Text('${status.emoji} ${status.displayName}'),
         actions: [
           TextButton.icon(
             onPressed: () => provider.simulateArrival(),
@@ -306,10 +304,11 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            // Current status card
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -317,69 +316,131 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
                   children: [
                     Text(
                       delivery.takeawayEmoji,
-                      style: const TextStyle(fontSize: 60),
+                      style: const TextStyle(fontSize: 48),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Bringing ${delivery.takeawayDisplayName}',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.darkBrown,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.lightOrange,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.timer, color: AppTheme.primaryOrange),
-                          const SizedBox(width: 8),
-                          Text(
-                            'ETA: ${minutes}m ${seconds.toString().padLeft(2, '0')}s',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryOrange,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                    // Status progress bar
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: LinearProgressIndicator(
-                        value: provider.deliveryProgress,
+                        value: status.progressValue,
                         backgroundColor: AppTheme.lightOrange,
                         valueColor:
                             AlwaysStoppedAnimation(AppTheme.primaryOrange),
-                        minHeight: 12,
+                        minHeight: 10,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${(provider.deliveryProgress * 100).toInt()}% of the way home',
+                      status.displayName,
                       style: TextStyle(
-                        color: AppTheme.warmBrown.withValues(alpha: 0.7),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primaryOrange,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+
+            // Status timeline
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.timeline, color: AppTheme.primaryOrange),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Order Progress',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.darkBrown,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...DeliveryStatus.values
+                        .where((s) => s != DeliveryStatus.nearlyThere)
+                        .map((s) => _buildStatusRow(s, delivery.status)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ETA card (only when tracking)
+            if (isTracking) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.timer, color: AppTheme.primaryOrange),
+                          const SizedBox(width: 8),
+                          Builder(builder: (context) {
+                            final eta = provider.etaRemaining;
+                            final minutes = eta.inMinutes;
+                            final seconds = eta.inSeconds % 60;
+                            return Text(
+                              'ETA: ${minutes}m ${seconds.toString().padLeft(2, '0')}s',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryOrange,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: provider.deliveryProgress,
+                          backgroundColor: AppTheme.lightOrange,
+                          valueColor:
+                              AlwaysStoppedAnimation(AppTheme.successGreen),
+                          minHeight: 8,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${(provider.deliveryProgress * 100).toInt()}% of the way home',
+                        style: TextStyle(
+                          color: AppTheme.warmBrown.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Multi-drop stop tracker
-            if (delivery.isMultiDrop) ...[
-              const SizedBox(height: 16),
+            if (delivery.isMultiDrop &&
+                (status == DeliveryStatus.onRoute ||
+                    status == DeliveryStatus.nearlyThere)) ...[
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -408,17 +469,6 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
                             ),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: delivery.stopsProgress,
-                          backgroundColor: AppTheme.lightOrange,
-                          valueColor:
-                              AlwaysStoppedAnimation(AppTheme.successGreen),
-                          minHeight: 6,
-                        ),
                       ),
                       const SizedBox(height: 12),
                       ...delivery.stops.map((stop) => _buildStopRow(
@@ -453,9 +503,33 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
                     ),
                   ),
                 ),
+              const SizedBox(height: 16),
             ],
 
-            const Spacer(),
+            // Next status button
+            if (status.next != null &&
+                status != DeliveryStatus.nearlyThere)
+              ElevatedButton.icon(
+                onPressed: () => provider.advanceDeliveryStatus(),
+                icon: Icon(_statusActionIcon(status)),
+                label: Text(
+                  _statusActionLabel(status),
+                  style: const TextStyle(fontSize: 16),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryOrange,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
             TextButton(
               onPressed: () => provider.cancelDelivery(),
               child: Text(
@@ -463,9 +537,86 @@ class _DadViewState extends State<DadView> with SingleTickerProviderStateMixin {
                 style: TextStyle(color: AppTheme.warmBrown),
               ),
             ),
-            const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+
+  String _statusActionLabel(DeliveryStatus status) => switch (status) {
+        DeliveryStatus.arrivedAtRestaurant => "ORDER PLACED",
+        DeliveryStatus.orderPlaced => "THEY'RE MAKING IT",
+        DeliveryStatus.orderPreparing => "GOT THE FOOD!",
+        DeliveryStatus.orderCollected => "ON MY WAY!",
+        DeliveryStatus.onRoute => "NEARLY THERE!",
+        _ => "NEXT",
+      };
+
+  IconData _statusActionIcon(DeliveryStatus status) => switch (status) {
+        DeliveryStatus.arrivedAtRestaurant => Icons.receipt_long,
+        DeliveryStatus.orderPlaced => Icons.restaurant,
+        DeliveryStatus.orderPreparing => Icons.shopping_bag,
+        DeliveryStatus.orderCollected => Icons.directions_car,
+        DeliveryStatus.onRoute => Icons.pin_drop,
+        _ => Icons.arrow_forward,
+      };
+
+  Widget _buildStatusRow(DeliveryStatus step, DeliveryStatus currentStatus) {
+    final isDone = step.index < currentStatus.index;
+    final isCurrent = step == currentStatus;
+    final IconData icon;
+    final Color color;
+
+    if (isDone) {
+      icon = Icons.check_circle;
+      color = AppTheme.successGreen;
+    } else if (isCurrent) {
+      icon = Icons.radio_button_checked;
+      color = AppTheme.primaryOrange;
+    } else {
+      icon = Icons.radio_button_unchecked;
+      color = AppTheme.warmBrown.withValues(alpha: 0.3);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 22, color: color),
+          const SizedBox(width: 10),
+          Text(step.emoji, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              step.displayName,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                color: isDone
+                    ? AppTheme.warmBrown.withValues(alpha: 0.5)
+                    : isCurrent
+                        ? AppTheme.darkBrown
+                        : AppTheme.warmBrown.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+          if (isCurrent)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryOrange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'NOW',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryOrange,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -155,6 +155,15 @@ class FirestoreService {
     });
   }
 
+  Future<void> updateDeliveryStatus({
+    required String deliveryId,
+    required DeliveryStatus status,
+  }) async {
+    await _firestore.collection('deliveries').doc(deliveryId).update({
+      'status': status.name,
+    });
+  }
+
   Future<void> completeDelivery(String deliveryId) async {
     await _firestore.collection('deliveries').doc(deliveryId).update({
       'isActive': false,
