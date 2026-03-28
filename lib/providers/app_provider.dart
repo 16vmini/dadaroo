@@ -328,6 +328,20 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> signInWithGoogle() async {
+    final profile = await _authService.signInWithGoogle();
+    _userProfile = profile;
+    await _notificationService.initialize(profile.uid);
+    notifyListeners();
+  }
+
+  Future<void> signInWithApple() async {
+    final profile = await _authService.signInWithApple();
+    _userProfile = profile;
+    await _notificationService.initialize(profile.uid);
+    notifyListeners();
+  }
+
   Future<void> signOut() async {
     if (_familyGroup != null) {
       await _notificationService.unsubscribeFromFamily(_familyGroup!.id);

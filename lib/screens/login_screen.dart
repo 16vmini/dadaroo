@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dadaroo/config/app_config.dart';
@@ -41,6 +43,47 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+    } catch (e) {
+      setState(() => _error = _friendlyError(e.toString()));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  bool get _showAppleSignIn {
+    if (kIsWeb) return true;
+    try {
+      return Platform.isIOS || Platform.isMacOS;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final provider = context.read<AppProvider>();
+      await provider.signInWithApple();
+    } catch (e) {
+      setState(() => _error = _friendlyError(e.toString()));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final provider = context.read<AppProvider>();
+      await provider.signInWithGoogle();
     } catch (e) {
       setState(() => _error = _friendlyError(e.toString()));
     } finally {
@@ -211,6 +254,61 @@ class _LoginScreenState extends State<LoginScreen> {
                         : Text('Sign In as ${appConfig.parentRole}'),
                   ),
                 ),
+                const SizedBox(height: 16),
+
+                // Google Sign-In button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _loading ? null : _signInWithGoogle,
+                    icon: Image.network(
+                      'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                      height: 24,
+                      width: 24,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.g_mobiledata, size: 24),
+                    ),
+                    label: const Text('Sign in with Google'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.darkBrown,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Apple Sign-In button (iOS/macOS/web only)
+                if (_showAppleSignIn) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _loading ? null : _signInWithApple,
+                      icon: const Icon(Icons.apple, size: 24),
+                      label: const Text('Sign in with Apple'),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 20),
 
                 // Register link for parents
