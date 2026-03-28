@@ -13,7 +13,7 @@
 class MapConfig {
   /// Set this to your Google Maps API key.
   /// Leave empty to fall back to the mock map.
-  static const String apiKey = '';
+  static const String apiKey = 'AIzaSyB3-N5KwVMHmZ41RTmmppaVm80uXeR9yxo';
 
   static bool get hasApiKey => apiKey.isNotEmpty;
 
