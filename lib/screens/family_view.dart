@@ -5,7 +5,7 @@ import 'package:dadaroo/models/delivery.dart';
 import 'package:dadaroo/providers/app_provider.dart';
 import 'package:dadaroo/services/parent_jokes.dart';
 import 'package:dadaroo/theme/app_theme.dart';
-import 'package:dadaroo/widgets/map_widget.dart';
+import 'package:dadaroo/widgets/dadaroo_map.dart';
 import 'package:dadaroo/widgets/celebration_widget.dart';
 
 class FamilyView extends StatelessWidget {
@@ -182,7 +182,7 @@ class FamilyView extends StatelessWidget {
 
             // Map (only when on route)
             if (isTracking)
-              MockMapWidget(
+              DadarooMap(
                 dadLocation: provider.currentParentLocation,
                 homeLocation: provider.gpsService.homeLocation,
                 progress: provider.deliveryProgress,
