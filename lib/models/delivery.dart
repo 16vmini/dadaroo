@@ -18,7 +18,7 @@ enum DeliveryStatus {
         orderPreparing => 'Order Being Prepared',
         orderCollected => 'Order Collected',
         onRoute => 'On Route',
-        nearlyThere => 'Nearly There!',
+        nearlyThere => 'Arrived!',
         delivered => 'Delivered',
       };
 
@@ -38,7 +38,7 @@ enum DeliveryStatus {
         orderPreparing => "'s order is being prepared...",
         orderCollected => 'has collected the food!',
         onRoute => 'is on the way home!',
-        nearlyThere => 'is nearly there!',
+        nearlyThere => 'has arrived!',
         delivered => 'has arrived with the food!',
       };
 
