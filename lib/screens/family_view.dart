@@ -7,6 +7,7 @@ import 'package:dadaroo/services/parent_jokes.dart';
 import 'package:dadaroo/theme/app_theme.dart';
 import 'package:dadaroo/widgets/dadaroo_map.dart';
 import 'package:dadaroo/widgets/celebration_widget.dart';
+import 'package:dadaroo/screens/rate_dad_view.dart';
 
 class FamilyView extends StatelessWidget {
   const FamilyView({super.key});
@@ -321,7 +322,12 @@ class FamilyView extends StatelessWidget {
               children: [
                 ElevatedButton.icon(
                   onPressed: () {
-                    provider.skipRating();
+                    provider.acknowledgeCelebration();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const RateDadView(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.star),
                   label: Text('Rate Your ${appConfig.parentRole}!'),

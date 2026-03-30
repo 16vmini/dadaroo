@@ -709,6 +709,13 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Dismiss the celebration screen without clearing the delivery,
+  /// so the rating screen can still access it.
+  void acknowledgeCelebration() {
+    _showCelebration = false;
+    notifyListeners();
+  }
+
   void skipRating() {
     if (_activeDelivery != null) {
       final completed = _activeDelivery!.copyWith(isActive: false);
