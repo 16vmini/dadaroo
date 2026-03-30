@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:dadaroo/config/app_config.dart';
 import 'package:dadaroo/firebase_options.dart';
+import 'package:dadaroo/models/user_profile.dart';
 import 'package:dadaroo/providers/app_provider.dart';
 import 'package:dadaroo/screens/login_screen.dart';
 import 'package:dadaroo/screens/family_setup_screen.dart';
@@ -100,49 +101,75 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  static const _screens = [
-    DadView(),
-    FamilyView(),
-    RateDadView(),
-    HistoryView(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final isDad = provider.userProfile?.role == UserRole.dad;
+
+    final screens = isDad
+        ? const [DadView(), FamilyView(), RateDadView(), HistoryView()]
+        : const [FamilyView(), RateDadView(), HistoryView()];
+
+    final destinations = isDad
+        ? [
+            NavigationDestination(
+              icon: const Icon(Icons.directions_car_outlined),
+              selectedIcon:
+                  Icon(Icons.directions_car, color: AppTheme.primaryOrange),
+              label: appConfig.parentRole,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.family_restroom_outlined),
+              selectedIcon:
+                  Icon(Icons.family_restroom, color: AppTheme.primaryOrange),
+              label: 'Family',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.star_outline),
+              selectedIcon: Icon(Icons.star, color: AppTheme.primaryOrange),
+              label: 'Rate ${appConfig.parentRole}',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.history_outlined),
+              selectedIcon: Icon(Icons.history, color: AppTheme.primaryOrange),
+              label: 'History',
+            ),
+          ]
+        : [
+            NavigationDestination(
+              icon: const Icon(Icons.family_restroom_outlined),
+              selectedIcon:
+                  Icon(Icons.family_restroom, color: AppTheme.primaryOrange),
+              label: 'Tracking',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.star_outline),
+              selectedIcon: Icon(Icons.star, color: AppTheme.primaryOrange),
+              label: 'Rate ${appConfig.parentRole}',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.history_outlined),
+              selectedIcon: Icon(Icons.history, color: AppTheme.primaryOrange),
+              label: 'History',
+            ),
+          ];
+
+    // Clamp index if role changes
+    if (_currentIndex >= screens.length) {
+      _currentIndex = 0;
+    }
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
           setState(() => _currentIndex = index);
         },
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.directions_car_outlined),
-            selectedIcon:
-                Icon(Icons.directions_car, color: AppTheme.primaryOrange),
-            label: appConfig.parentRole,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.family_restroom_outlined),
-            selectedIcon:
-                Icon(Icons.family_restroom, color: AppTheme.primaryOrange),
-            label: 'Family',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.star_outline),
-            selectedIcon: Icon(Icons.star, color: AppTheme.primaryOrange),
-            label: 'Rate ${appConfig.parentRole}',
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history, color: AppTheme.primaryOrange),
-            label: 'History',
-          ),
-        ],
+        destinations: destinations,
       ),
     );
   }
