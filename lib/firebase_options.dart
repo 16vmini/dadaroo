@@ -40,19 +40,19 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB3-N5KwVMHmZ41RTmmppaVm80uXeR9yxo',
-    appId: '1:33133754624:ios:e76b8f53835d3de5909be5',
+    appId: '1:33133754624:ios:f8cbc0d8e9b53f84909be5',
     messagingSenderId: '33133754624',
     projectId: 'dadaroo',
     storageBucket: 'dadaroo.firebasestorage.app',
-    iosBundleId: 'com.example.dadaroo',
+    iosBundleId: 'com.dadaroo.dadaroo',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyB3-N5KwVMHmZ41RTmmppaVm80uXeR9yxo',
-    appId: '1:33133754624:ios:e76b8f53835d3de5909be5',
+    appId: '1:33133754624:ios:f8cbc0d8e9b53f84909be5',
     messagingSenderId: '33133754624',
     projectId: 'dadaroo',
     storageBucket: 'dadaroo.firebasestorage.app',
-    iosBundleId: 'com.example.dadaroo',
+    iosBundleId: 'com.dadaroo.dadaroo',
   );
 }
