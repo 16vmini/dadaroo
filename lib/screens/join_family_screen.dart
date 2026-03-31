@@ -164,6 +164,7 @@ class _JoinFamilyScreenState extends State<JoinFamilyScreen> {
 
         TextFormField(
           controller: _codeController,
+          onChanged: (_) => setState(() {}),
           textCapitalization: TextCapitalization.characters,
           textAlign: TextAlign.center,
           style: TextStyle(
