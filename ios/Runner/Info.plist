@@ -41,6 +41,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Dadaroo needs camera access to scan QR codes for family group setup.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Dadaroo uses your location to show your family where you are and calculate your ETA home with the food.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Dadaroo uses your location in the background to keep your family updated on your ETA while you are picking up food.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
