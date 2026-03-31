@@ -281,21 +281,26 @@ class AppProvider extends ChangeNotifier {
     required String name,
     required String inviteCode,
   }) async {
-    debugPrint('[joinFamilyAsGuest] Starting anonymous sign-in...');
-    final profile = await _authService.signUpAnonymous(name: name);
+    debugPrint('[JOIN] Step 1: Anonymous sign-in...');
+    final profile = await _authService.signUpAnonymous(name: name)
+        .timeout(const Duration(seconds: 10), onTimeout: () {
+      throw Exception('Anonymous sign-in timed out. Check your internet connection.');
+    });
     _userProfile = profile;
-    debugPrint('[joinFamilyAsGuest] Anonymous sign-in done: ${profile.uid}');
+    debugPrint('[JOIN] Step 2: Signed in as ${profile.uid}');
 
     // Don't block join on notification setup
     _notificationService.initialize(profile.uid).catchError((_) {});
 
-    debugPrint('[joinFamilyAsGuest] Joining family with code: $inviteCode');
+    debugPrint('[JOIN] Step 3: Looking up family code: $inviteCode');
     final group = await _firestoreService.joinFamilyByCode(
       inviteCode: inviteCode,
       uid: profile.uid,
       role: UserRole.familyMember,
-    );
-    debugPrint('[joinFamilyAsGuest] Join result: ${group?.name ?? 'null'}');
+    ).timeout(const Duration(seconds: 10), onTimeout: () {
+      throw Exception('Family lookup timed out. Check your internet connection.');
+    });
+    debugPrint('[JOIN] Step 4: Result: ${group?.name ?? 'NOT FOUND'}');
 
     if (group != null) {
       _notificationService.subscribeToFamily(group.id).catchError((_) {});
