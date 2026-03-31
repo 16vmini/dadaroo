@@ -50,8 +50,10 @@ class _JoinFamilyScreenState extends State<JoinFamilyScreen> {
         if (mounted) {
           setState(() => _error = 'No family found with code "$code". Check the code and try again.');
         }
+      } else if (mounted) {
+        // Success — pop back so AuthGate can route to main app
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
-      // If successful, AuthGate will route to the main app automatically
     } catch (e) {
       try {
         final provider = context.read<AppProvider>();
