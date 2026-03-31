@@ -281,17 +281,24 @@ class AppProvider extends ChangeNotifier {
     required String name,
     required String inviteCode,
   }) async {
+    debugPrint('[joinFamilyAsGuest] Starting anonymous sign-in...');
     final profile = await _authService.signUpAnonymous(name: name);
     _userProfile = profile;
-    await _notificationService.initialize(profile.uid);
+    debugPrint('[joinFamilyAsGuest] Anonymous sign-in done: ${profile.uid}');
 
+    // Don't block join on notification setup
+    _notificationService.initialize(profile.uid).catchError((_) {});
+
+    debugPrint('[joinFamilyAsGuest] Joining family with code: $inviteCode');
     final group = await _firestoreService.joinFamilyByCode(
       inviteCode: inviteCode,
       uid: profile.uid,
       role: UserRole.familyMember,
     );
+    debugPrint('[joinFamilyAsGuest] Join result: ${group?.name ?? 'null'}');
+
     if (group != null) {
-      await _notificationService.subscribeToFamily(group.id);
+      _notificationService.subscribeToFamily(group.id).catchError((_) {});
     }
     notifyListeners();
     return group;
