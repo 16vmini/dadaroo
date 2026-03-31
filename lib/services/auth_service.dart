@@ -76,17 +76,12 @@ class AuthService {
   }
 
   Future<UserProfile> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null) {
-      throw Exception('Google sign-in cancelled');
-    }
-
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
+    final googleSignIn = GoogleSignIn.instance;
+    await googleSignIn.initialize();
+    final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
 
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
+      idToken: googleUser.authentication.idToken,
     );
 
     final userCredential = await _auth.signInWithCredential(credential);
@@ -151,7 +146,7 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
-      await GoogleSignIn().signOut();
+      await GoogleSignIn.instance.signOut();
     } catch (_) {}
     await _auth.signOut();
   }
