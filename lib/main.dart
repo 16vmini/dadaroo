@@ -81,6 +81,12 @@ class AuthGate extends StatelessWidget {
       return const LoginScreen();
     }
 
+    // Anonymous user with no family group = failed join attempt, auto sign out
+    if (!provider.hasFamilyGroup && (provider.userProfile?.isAnonymous ?? false)) {
+      provider.signOut();
+      return const LoginScreen();
+    }
+
     // Logged in but no family group
     if (!provider.hasFamilyGroup) {
       return const FamilySetupScreen();
