@@ -44,8 +44,15 @@ class DadarooApp extends StatelessWidget {
 }
 
 /// Routes the user to the correct screen based on auth & family state.
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _checkedStaleAnonymous = false;
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +88,16 @@ class AuthGate extends StatelessWidget {
       return const LoginScreen();
     }
 
-    // Anonymous user with no family group = failed join attempt, auto sign out
-    if (!provider.hasFamilyGroup && (provider.userProfile?.isAnonymous ?? false)) {
-      provider.signOut();
-      return const LoginScreen();
+    // On first load only: auto sign out stale anonymous users with no family group
+    if (!_checkedStaleAnonymous) {
+      _checkedStaleAnonymous = true;
+      if (!provider.hasFamilyGroup && (provider.userProfile?.isAnonymous ?? false)) {
+        // Use addPostFrameCallback to avoid calling signOut during build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          provider.signOut();
+        });
+        return const LoginScreen();
+      }
     }
 
     // Logged in but no family group
