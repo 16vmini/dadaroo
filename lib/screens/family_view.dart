@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dadaroo/config/app_config.dart';
 import 'package:dadaroo/models/delivery.dart';
+import 'package:dadaroo/models/user_profile.dart';
 import 'package:dadaroo/providers/app_provider.dart';
+import 'package:dadaroo/screens/family_members_screen.dart';
 import 'package:dadaroo/services/parent_jokes.dart';
 import 'package:dadaroo/theme/app_theme.dart';
 import 'package:dadaroo/widgets/dadaroo_map.dart';
@@ -15,11 +17,18 @@ class FamilyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
+    final isDad = provider.userProfile?.role == UserRole.dad;
 
     if (provider.showCelebration) {
       return _buildCelebrationView(context, provider);
     }
 
+    // Dad sees family members management view
+    if (isDad) {
+      return const FamilyMembersScreen();
+    }
+
+    // Family members see waiting/tracking view
     if (!provider.isDeliveryActive) {
       return _buildWaitingView();
     }
