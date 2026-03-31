@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -43,20 +44,22 @@ class _JoinFamilyScreenState extends State<JoinFamilyScreen> {
       final group = await provider.joinFamilyAsGuest(
         name: name,
         inviteCode: code,
-      );
+      ).timeout(const Duration(seconds: 15));
       if (group == null) {
-        // Sign out the anonymous user so they can try again cleanly
         await provider.signOut();
-        setState(() => _error = 'No family found with this code. Please check and try again.');
+        if (mounted) {
+          setState(() => _error = 'No family found with code "$code". Check the code and try again.');
+        }
       }
       // If successful, AuthGate will route to the main app automatically
     } catch (e) {
-      // Sign out on failure so the user doesn't get stuck
       try {
         final provider = context.read<AppProvider>();
         await provider.signOut();
       } catch (_) {}
-      setState(() => _error = 'Failed to join family. Please try again.');
+      if (mounted) {
+        setState(() => _error = 'Failed to join: ${e.toString().replaceAll('Exception: ', '')}');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -355,12 +358,20 @@ class _JoinFamilyScreenState extends State<JoinFamilyScreen> {
                 final barcodes = capture.barcodes;
                 for (final barcode in barcodes) {
                   final value = barcode.rawValue;
-                  if (value != null && value.contains('://join/')) {
-                    final code = value.split('://join/').last;
+                  if (value == null) continue;
+                  // Try deep link format: dadaroo://join/ABC123
+                  if (value.contains('://join/')) {
+                    final code = value.split('://join/').last.trim();
                     if (code.length == 6) {
                       _onCodeEntered(code);
                       return;
                     }
+                  }
+                  // Also accept raw 6-character code
+                  final trimmed = value.trim().toUpperCase();
+                  if (trimmed.length == 6 && RegExp(r'^[A-Z0-9]+$').hasMatch(trimmed)) {
+                    _onCodeEntered(trimmed);
+                    return;
                   }
                 }
               },
