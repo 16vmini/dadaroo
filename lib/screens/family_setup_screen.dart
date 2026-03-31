@@ -25,7 +25,16 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
     final isDad = provider.userProfile?.role == UserRole.dad;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Family Setup')),
+      appBar: AppBar(
+        title: const Text('Family Setup'),
+        actions: [
+          TextButton.icon(
+            onPressed: () => provider.signOut(),
+            icon: const Icon(Icons.logout, size: 18),
+            label: const Text('Sign Out'),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(

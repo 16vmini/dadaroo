@@ -45,10 +45,17 @@ class _JoinFamilyScreenState extends State<JoinFamilyScreen> {
         inviteCode: code,
       );
       if (group == null) {
-        setState(() => _error = 'No family found with this code');
+        // Sign out the anonymous user so they can try again cleanly
+        await provider.signOut();
+        setState(() => _error = 'No family found with this code. Please check and try again.');
       }
       // If successful, AuthGate will route to the main app automatically
     } catch (e) {
+      // Sign out on failure so the user doesn't get stuck
+      try {
+        final provider = context.read<AppProvider>();
+        await provider.signOut();
+      } catch (_) {}
       setState(() => _error = 'Failed to join family. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
